@@ -23,11 +23,11 @@ void DieWithError(char *errorMessage){
 void commun(int sock){
     char buf[BUF_SIZE];
     int len_r;
-    char *message="ヒヒイロをくれ";
+    char *message="古戦場から逃げるな";
     if(send(sock,message,strlen(message),0)!=strlen(message)){
         DieWithError("send()sent a message of unexpected bytes");
     }
-   
+    
     if((len_r=recv(sock,buf,BUF_SIZE,0))<=0){
         DieWithError("recv() failed");
     }

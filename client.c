@@ -41,10 +41,12 @@ int main(int argc,char **argv){
     if(argc!=3){
         DieWithError("arguments is not available");
     }
-    char *server_ipaddr=argv[1];//"10.13.64.20"
+    char *server_ipaddr=argv[1];//"10.13.64.20"ipaddress
     int server_port=atoi(argv[2]);//10001
     
     int sock=socket(PF_INET,SOCK_STREAM,0);
+	
+	if(sock<0){DieWithError("socket()failed");}
     
     struct sockaddr_in target;
 

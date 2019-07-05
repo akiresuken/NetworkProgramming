@@ -15,23 +15,49 @@ void DieWithError(char *errorMessage) {
 
 void commun(int sock) {
     char buf[BUF_SIZE];
+    char buf_old[BUF_SIZE];
+    char buf2[2*BUF_SIZE];
     int len_r;
-    char response[BUF_SIZE];
-    while((len_r = recv(sock, buf, BUF_SIZE, 0)>0){
-        buf[len_r] = '\0';
-        printf("%s\n", buf);
+	char response[BUF_SIZE];
 
-        if(strstr(buf,"\r\n\r\n")){
-            print("recive HTTP Request.\n")
+    buf_old[0]='\0';
+
+    while((len_r = recv(sock, buf, BUF_SIZE, 0)) > 0){
+        buf[len_r] = '\0';
+        sprintf(buf2,"%s%s",buf_old,buf);
+
+        if (strstr(buf, "\r\n\r\n")) {
             break;
         }
+        sprintf(buf_old,"%s",buf);
     }
 
     if (len_r <= 0)
-        DieWithError("recv() failed");
-
-    sprintf(response,"HTTP/1.1 200 OK\r\n")    
+        DieWithError("received() failed.");
     
+    printf("received HTTP Request.\n");
+
+    sprintf(response, "HTTP/1.1 200 OK\r\n");
+    if(send(sock, response, strlen(response), 0) != strlen(response))
+        DieWithError("send() sent a message of unexpected bytes");
+    
+    sprintf(response, "Content-Type: text/html; charset=utf-8\r\n");
+    if(send(sock, response, strlen(response), 0) != strlen(response))
+        DieWithError("send() sent a message of unexpected bytes");
+        
+    sprintf(response, "\r\n");
+    if(send(sock, response, strlen(response), 0) != strlen(response))
+        DieWithError("send() sent a message of unexpected bytes");
+    
+    sprintf(response, "<!DOCTYPE html><html><head><title>");
+    if(send(sock, response, strlen(response), 0) != strlen(response))
+        DieWithError("send() sent a message of unexpected bytes");
+    
+    sprintf(response, "ネットワークプログラミングのwebサイト");
+    if(send(sock, response, strlen(response), 0) != strlen(response))
+        DieWithError("send() sent a message of unexpected bytes");
+    
+    sprintf(response, "</title></head><body>ネットワークダイスキ</body></html>");
     if(send(sock, response, strlen(response), 0) != strlen(response))
         DieWithError("send() sent a message of unexpected bytes");
 }

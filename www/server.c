@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <regex.h>
 
 #define BUF_SIZE 256
 
@@ -14,22 +15,47 @@ void DieWithError(char *errorMessage) {
 }
 
 void commun(int sock) {
+    printf("start");
     char buf[BUF_SIZE];
     char buf_old[BUF_SIZE];
     char buf2[2*BUF_SIZE];
     int len_r;
-	char response[BUF_SIZE];
+    char response[BUF_SIZE];
+    regex_t regBuf;
+    regmatch_t regMatch[1];
+    char result[100];
+    result[0]='\0';
+    const char *pattern="*GET[^\\n]+HTTP";
+    char *uri;
+    if(regcomp(&regBuf,pattern,REG_EXTENDED | REG_NEWLINE)!=0)
+        DieWithError("regcomp failed");
 
-    buf_old[0]='\0';
-
+    buf_old[0] = '\0';
+    
     while((len_r = recv(sock, buf, BUF_SIZE, 0)) > 0){
         buf[len_r] = '\0';
-        sprintf(buf2,"%s%s",buf_old,buf);
+        sprintf(buf2, "%s%s", buf_old, buf);
 
-        if (strstr(buf, "\r\n\r\n")) {
+        printf("%s", buf);
+        if(regexec(&regBuf,buf2,1,regMatch,0)!=0){
+            int startindex=regMatch[0].rm_so;
+            int endindex=regMatch[0].rm_eo;
+            strncpy(result,buf2+startindex,endindex-startindex);
+        }
+        if (strstr(buf2, "\r\n\r\n")) {
             break;
         }
-        sprintf(buf_old,"%s",buf);
+		
+	    sprintf(buf_old, "%s", buf);
+    }
+    regfree(&regBuf);
+
+    if(result[0]!='\0'){
+        uri=strtok(result," ");
+        uri=strtok(NULL," ");
+        printf("%s\n",uri);
+    }else{
+        DieWithError("No URI");
     }
 
     if (len_r <= 0)
@@ -60,6 +86,7 @@ void commun(int sock) {
     sprintf(response, "</title></head><body>ネットワークダイスキ</body></html>");
     if(send(sock, response, strlen(response), 0) != strlen(response))
         DieWithError("send() sent a message of unexpected bytes");
+
 }
 
 int main(int argc, char *argv[]) {
